@@ -1,0 +1,15 @@
+{
+  "name": "ezeYaniv",
+  "description": "Personal Claude Code plugins",
+  "owner": {
+    "name": "Yaniv Brener"
+  },
+  "plugins": [
+    {
+      "name": "go",
+      "version": "1.0.0",
+      "description": "Personal workflow commands",
+      "source": "./plugins/go"
+    }
+  ]
+}
