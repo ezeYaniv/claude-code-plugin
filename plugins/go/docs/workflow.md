@@ -130,3 +130,44 @@ Claude: [runs /go:retro]
         [commits and pushes]
         Branch pushed. Ready for PR.
 ```
+
+## Parallel Development
+
+Work on multiple issues simultaneously using git worktrees.
+
+### Workflow
+
+```
+Main repo (main)                   Worktree (#123)
+      │                                  │
+      ├── /go:go 123                     │
+      │   [creates worktree]             │
+      │   [opens VS Code] ──────────────►│
+      │                                  ├── claude
+      │                                  ├── /go:go 123
+      │                                  ├── (normal workflow)
+      │                                  ├── /go:finalize
+      │◄─────────────────────────────────┤ [cleanup]
+```
+
+### How It Works
+
+1. Run `/go:go {ISSUE_NUMBER}` from main repo on `main` branch
+2. Claude automatically creates a worktree at `../{repo-name}-{ISSUE_NUMBER}`
+3. If VS Code `code` command is available, opens worktree in a new VS Code window
+4. Open a terminal in the worktree directory and run `claude` to start working
+5. On `/go:finalize`, settings sync back and worktree is cleaned up
+
+### Managing Worktrees
+
+| Command | Description |
+|---------|-------------|
+| `/go:worktree list` | See all active worktrees |
+| `/go:worktree sync` | Sync settings from main repo |
+| `/go:worktree cleanup {ISSUE_NUMBER}` | Manual cleanup |
+
+### Settings That Sync
+
+These files are copied to worktrees and synced back on cleanup:
+- `.env` - Environment variables and secrets
+- `.claude/settings.local.json` - Local Claude permissions and hooks

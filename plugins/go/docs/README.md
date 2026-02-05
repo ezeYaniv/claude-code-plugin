@@ -44,6 +44,7 @@ See [workflow.md](workflow.md) for the full state machine, iteration loops, and 
 | `/go:rev` | Review implementation |
 | `/go:pm` | Issue management and decomposition |
 | `/go:finalize` | Commit and push |
+| `/go:worktree` | Manage git worktrees for parallel development |
 | `/go:pr-review` | Review another dev's PR |
 | `/go:learn` | Update plugin with feedback |
 | `/go:retro` | Extract learnings from completed work |
