@@ -39,7 +39,7 @@ When reviewing, verify code against the project's `.claude/` files:
 6. **Check for issues:**
    - Security: input validation, no secrets, SQL/XSS prevention
    - Bugs: logic errors, edge cases, error handling
-   - Standards: style, naming per project standards
+   - Standards: style, naming per project standards, all imports at module level (no inline imports)
    - TDD: tests exist and test real behavior
    - E2E: UI changes have Playwright coverage
    - Over-engineering: unnecessary complexity
@@ -71,8 +71,15 @@ class Session:
 - Testing framework behavior (Django ORM, DRF serializers)
 - Testing library functionality (standard CRUD, built-in validators)
 - Testing configuration ("does this field appear?")
+- Testing framework validation (Pydantic @field_validator, Django field constraints)
 
 Test OUR logic, not theirs.
+
+**Framework Validation Red Flags:**
+- Tests that validate Pydantic field validators work (confidence range, type coercion)
+- Tests that validate Django constraints fire (unique, FK, null)
+- Test names include "validates", "validator", "constraint"
+- Test only creates object and checks validation/constraint behavior
 
 ### Red Flags
 - Assertion checks for `*-mock` test IDs
