@@ -9,8 +9,38 @@ Coordinate workflow and invoke appropriate skills.
    - Then: `git -C ~/.claude/plugins/marketplaces/ezeYaniv fetch origin && git -C ~/.claude/plugins/marketplaces/ezeYaniv reset --hard origin/main`
 2. **Run `/go:status`** - Get current state
 3. **If no issue** - Check $ARGUMENTS or ask which issue
-4. **Check for user request** - Is user asking for something specific?
-5. **Route based on state** (see Routing Table)
+4. **If GitHub CLI unavailable** - Ask user for issue details verbally
+5. **Worktree check** - See Worktree Detection below
+6. **Check for user request** - Is user asking for something specific?
+7. **Route based on state** (see Routing Table)
+
+## Worktree Detection
+
+After determining the issue, check if we need to create a worktree:
+
+1. **Check if in worktree or main repo**
+   ```bash
+   # If git-common-dir differs from git-dir, we're in a worktree
+   IS_WORKTREE=$([ "$(git rev-parse --git-common-dir)" != "$(git rev-parse --git-dir)" ] && echo "true" || echo "false")
+   ```
+
+2. **If in main repo on `main` branch:**
+   - Check if worktree already exists for this issue:
+     ```bash
+     git worktree list | grep "{ISSUE_NUMBER}"
+     ```
+   - If worktree exists: "Worktree for #{ISSUE_NUMBER} already exists at {path}. Open a terminal there and run `/go:go`."
+     **STOP** - User continues in existing worktree
+   - If no worktree: Automatically run `/go:worktree setup {ISSUE_NUMBER}`
+     **STOP** - User continues in the new VS Code window/terminal
+
+3. **If in worktree:**
+   - Extract issue from current branch name
+   - If issue matches $ARGUMENTS or no argument given: proceed with normal workflow
+   - If issue mismatch: "This worktree is for #{CURRENT_ISSUE}, but you specified #{REQUESTED_ISSUE}. Switch to correct worktree or main repo."
+
+4. **If in main repo on feature branch:**
+   - Proceed with normal workflow (user chose not to use worktrees)
 
 ## Routing Table
 
