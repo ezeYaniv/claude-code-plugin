@@ -144,8 +144,20 @@ Prepare branch for PR after review approval.
 
    - Ask user: "Remove this worktree? (y/n)"
    - If yes:
+
+     **Remove from VS Code Project Manager BEFORE deleting worktree** (the worktree path must still exist to resolve it):
      ```bash
-     WORKTREE_PATH=$(git rev-parse --show-toplevel)
+     PROJECTS_JSON="$HOME/Library/Application Support/Code/User/globalStorage/alefragnani.project-manager/projects.json"
+     if [ -f "$PROJECTS_JSON" ] && command -v jq &> /dev/null; then
+       ABSOLUTE_PATH="$(cd "${WORKTREE_PATH}" && pwd)"
+       jq --arg path "$ABSOLUTE_PATH" 'map(select(.rootPath != $path))' \
+          "$PROJECTS_JSON" > "$PROJECTS_JSON.tmp" && mv "$PROJECTS_JSON.tmp" "$PROJECTS_JSON"
+       echo "Removed from VS Code Project Manager"
+     fi
+     ```
+
+     **Then remove the worktree:**
+     ```bash
      cd "${MAIN_REPO}"
      git worktree remove "${WORKTREE_PATH}" --force
      ```
