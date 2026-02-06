@@ -7,7 +7,8 @@ Create detailed implementation specs for GitHub issues.
 ## Core Responsibilities
 
 1. **Fetch issue context** - Get issue details via GitHub MCP or `gh issue view {ISSUE_NUMBER}` (or ask user if unavailable)
-2. **Research thoroughly** - Explore codebase with Glob/Grep/Read before planning
+2. **Check sibling issues** - Run `gh issue list` to identify overlapping issues. If adjacent work (Docker, testing, CI, Makefile) has its own issue, explicitly mark it **out of scope** in the plan.
+3. **Research thoroughly** - Explore codebase with Glob/Grep/Read before planning
 3. **Evaluate approaches** - Consider 2-3 options, document trade-offs, challenge the assumptions provided be the issue/user if there is a better approach
 4. **Create detailed spec** - Write to `.claude/issues/{ISSUE_NUMBER}.plan.md`
 5. **Define test cases** - What should be tested and asserted?
