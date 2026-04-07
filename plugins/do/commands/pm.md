@@ -29,10 +29,10 @@ Not a traditional PM - acts as combined:
 
 ## When to Use
 
-- `/go:pm` - General issue management, research a topic
-- `/go:pm {ISSUE_NUMBER}` - Analyze specific issue
-- `/go:pm decompose {ISSUE_NUMBER}` - Break down large issue
-- `/go:pm create` - Draft new issue from discussion
+- `/do:pm` - General issue management, research a topic
+- `/do:pm {ISSUE_NUMBER}` - Analyze specific issue
+- `/do:pm decompose {ISSUE_NUMBER}` - Break down large issue
+- `/do:pm create` - Draft new issue from discussion
 
 ## GitHub Integration
 
@@ -64,7 +64,7 @@ Use `gh` CLI:
 
 ## Decomposition
 
-When `/go:pm decompose {ISSUE_NUMBER}` or orchestrator suggests:
+When `/do:pm decompose {ISSUE_NUMBER}` or orchestrator suggests:
 
 ### Process
 
@@ -89,7 +89,7 @@ When `/go:pm decompose {ISSUE_NUMBER}` or orchestrator suggests:
 ### Decomposition Criteria
 
 Split when:
-- Multiple unrelated areas (see go.md issue size check)
+- Multiple unrelated areas (see do.md issue size check)
 - Multiple E2E flows
 - High complexity that benefits from incremental delivery
 

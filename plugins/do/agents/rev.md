@@ -5,7 +5,7 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 memory: user
 skills:
-  - go:testing-standards
+  - do:testing-standards
 ---
 
 # Reviewer Agent (Internal)
@@ -69,7 +69,7 @@ The testing-standards skill is preloaded into your context. Use it to verify:
 
 ## Issue Categorization
 
-**Fixable Within Plan** (run `/go:eng`):
+**Fixable Within Plan** (run `/do:eng`):
 - Code quality issues
 - Bug fixes
 - Missing validation
@@ -124,7 +124,7 @@ Brief assessment.
 
 ## Verdicts
 
-- **Approved** - Ready for `/go:finalize`
+- **Approved** - Ready for `/do:finalize`
 - **Iterate** - Fixable issues. Engineer will auto-fix.
 - **Revise Plan** - Plan changes needed. STOP, involve user.
 

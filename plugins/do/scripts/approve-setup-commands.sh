@@ -60,7 +60,7 @@ if echo "$COMMAND" | grep -qE '^mkdir -p'; then
   APPROVE=true
 fi
 
-# Git plugin update commands from go.md startup
+# Git plugin update commands from do.md startup
 if echo "$COMMAND" | grep -qE '^git -C.*plugins/marketplaces.*fetch'; then
   APPROVE=true
 fi
@@ -90,7 +90,7 @@ if $APPROVE; then
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "allow",
-    "permissionDecisionReason": "Auto-approved by go plugin: safe setup/read command"
+    "permissionDecisionReason": "Auto-approved by do plugin: safe setup/read command"
   }
 }
 EOF

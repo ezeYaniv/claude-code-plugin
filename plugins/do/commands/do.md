@@ -31,8 +31,8 @@ Parse the `action=` line from the output and route accordingly:
 |--------|-----------|
 | `proceed` | Continue with normal workflow |
 | `mismatch` | "This worktree is for #{ticket}, but you specified #{requested}. Switch to correct worktree or main repo." **STOP** |
-| `switch` | "Worktree for #{ticket} already exists at {path}. Open a terminal there and run `/go:go`." **STOP** |
-| `setup` | 1. Fetch the GitHub issue (if not already fetched) to get the title. 2. Slugify the title: lowercase, replace spaces/special chars with hyphens, truncate to ~50 chars. 3. Use the `EnterWorktree` tool with `name: {ISSUE_NUMBER}`. The `WorktreeCreate` hook handles `git worktree add`, copies env files, installs deps, registers plugins, and opens VSCode. 4. Create the feature branch: `git fetch origin && git checkout -B feature/{ISSUE_NUMBER}_{SLUGIFIED_TITLE} origin/main`. 5. **STOP** — Tell the user: "Worktree is ready. A new VSCode window has opened. Open Claude Code there and run `/go:go` to continue." |
+| `switch` | "Worktree for #{ticket} already exists at {path}. Open a terminal there and run `/do:do`." **STOP** |
+| `setup` | 1. Fetch the GitHub issue (if not already fetched) to get the title. 2. Slugify the title: lowercase, replace spaces/special chars with hyphens, truncate to ~50 chars. 3. Use the `EnterWorktree` tool with `name: {ISSUE_NUMBER}`. The `WorktreeCreate` hook handles `git worktree add`, copies env files, installs deps, registers plugins, and opens VSCode. 4. Create the feature branch: `git fetch origin && git checkout -B feature/{ISSUE_NUMBER}_{SLUGIFIED_TITLE} origin/main`. 5. **STOP** — Tell the user: "Worktree is ready. A new VSCode window has opened. Open Claude Code there and run `/do:do` to continue." |
 | `no-ticket` | Ask which issue to work on |
 
 ## Routing Table
@@ -40,31 +40,31 @@ Parse the `action=` line from the output and route accordingly:
 | State | Action |
 |-------|--------|
 | `no-issue` | Ask which issue to work on |
-| `needs-plan` | Check issue size -> Run `/go:plan` (enters Plan Mode) |
+| `needs-plan` | Check issue size -> Run `/do:plan` (enters Plan Mode) |
 | `needs-approval` | **STOP** - Tell user plan is ready for review (revision flow only) |
 | `implementing` | Spawn `eng` subagent |
 | `reviewing` | Spawn `rev` subagent |
 | `iterating` | Spawn `eng` subagent (to fix issues), then spawn `rev` subagent |
 | `needs-revision` | **STOP** - User must approve revised plan |
-| `approved` | Ready for `/go:finalize` |
-| `finalized` | Done - suggest `/go:retro` |
+| `approved` | Ready for `/do:finalize` |
+| `finalized` | Done - suggest `/do:retro` |
 
 **Human breakpoints (STOP and wait):**
-- Plan Mode approval -> User approves plan during `/go:plan` (this IS the plan approval)
+- Plan Mode approval -> User approves plan during `/do:plan` (this IS the plan approval)
 - `needs-revision` -> User must approve revised plan
 
 **Automatic transitions (do NOT ask, just proceed):**
-- `needs-plan` -> Run `/go:plan` immediately
+- `needs-plan` -> Run `/do:plan` immediately
 - `implementing` -> Spawn `eng` subagent immediately
 - `reviewing` -> Spawn `rev` subagent immediately
 - `iterating` -> Spawn `eng` then `rev` subagents immediately
-- `approved` -> Offer `/go:finalize`
+- `approved` -> Offer `/do:finalize`
 
 ## Spawning Subagents
 
 ### Engineer (`eng` subagent)
 
-Spawn with the Task tool, `subagent_type: "go:eng"`:
+Spawn with the Task tool, `subagent_type: "do:eng"`:
 
 ```
 Implement issue #{ISSUE_NUMBER}.
@@ -82,7 +82,7 @@ Mark [x] Implementation complete when done.
 
 ### Reviewer (`rev` subagent)
 
-Spawn with the Task tool, `subagent_type: "go:rev"`:
+Spawn with the Task tool, `subagent_type: "do:rev"`:
 
 ```
 Review implementation for issue #{ISSUE_NUMBER}.
@@ -106,7 +106,7 @@ After each subagent returns:
 
 ## Plan Persistence Safety Check
 
-**After `/go:plan` completes**, verify the plan was saved:
+**After `/do:plan` completes**, verify the plan was saved:
 
 1. Check if `.claude/issues/{ISSUE_NUMBER}.plan.md` exists
 2. Check if it contains `[x] Plan approved by user`
@@ -124,7 +124,7 @@ Before planning, evaluate scope. If ANY of these:
 
 Note: A single full-stack feature touching model -> serializer -> view -> frontend -> tests is fine. Flag issues that bundle *unrelated* features.
 
-Suggest: "This issue looks large. Run `/go:pm decompose {ISSUE_NUMBER}`?"
+Suggest: "This issue looks large. Run `/do:pm decompose {ISSUE_NUMBER}`?"
 
 ## Handling User Requests Mid-Flow
 
@@ -168,7 +168,7 @@ When user corrects behavior:
 1. Apply immediately
 2. Identify pattern
 3. Suggest: "Should I add this to the plugin permanently?"
-4. If yes, run `/go:learn` to update plugin
+4. If yes, run `/do:learn` to update plugin
 
 **Trigger phrases:** "You should have...", "Always do X", "Never do Y", "From now on..."
 

@@ -56,7 +56,7 @@ cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "PostToolUse",
-    "message": "Plan persisted to ${TARGET} and marked as approved. You can safely clear context — the orchestrator will pick up at 'implementing' state on next /go:go."
+    "message": "Plan persisted to ${TARGET} and marked as approved. You can safely clear context — the orchestrator will pick up at 'implementing' state on next /do:do."
   }
 }
 EOF
