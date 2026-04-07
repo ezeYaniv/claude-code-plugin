@@ -34,7 +34,7 @@ Automatically categorize each learning:
    - `commands/eng.md` - Engineering workflow
    - `commands/rev.md` - Review process
    - `commands/plan.md` - Planning
-   - `commands/go.md` - Orchestration
+   - `commands/do.md` - Orchestration
    - `commands/pm.md` - PM/decompose
    - `commands/finalize.md` - Finalization
    - `commands/status.md` - Status detection
@@ -81,17 +81,17 @@ git -C ~/.claude/plugins/marketplaces/ezeYaniv push
 ## Usage
 
 ```
-/go:learn Always run black before committing Python
+/do:learn Always run black before committing Python
 ```
 -> Project-specific -> updates project's standards.md
 
 ```
-/go:learn When reviewing, check for the N+1 query anti-pattern
+/do:learn When reviewing, check for the N+1 query anti-pattern
 ```
 -> Universal -> updates plugin/commands/rev.md
 
 ```
-/go:learn E2E tests should use data-testid not class selectors
+/do:learn E2E tests should use data-testid not class selectors
 ```
 -> Could be either - if it's a project convention -> project's testing.md; if it's universal best practice -> plugin/commands/eng.md
 

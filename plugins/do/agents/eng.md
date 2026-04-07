@@ -5,7 +5,7 @@ tools: Read, Write, Edit, Glob, Grep, Bash
 model: sonnet
 memory: project
 skills:
-  - go:testing-standards
+  - do:testing-standards
 ---
 
 # Engineer Agent

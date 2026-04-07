@@ -6,7 +6,7 @@ The plugin uses three types of components:
 
 | Component | Type | Context | Purpose |
 |-----------|------|---------|---------|
-| `go` | Skill (command) | Main thread | Orchestrator — routes state, spawns subagents |
+| `do` | Skill (command) | Main thread | Orchestrator — routes state, spawns subagents |
 | `plan` | Skill (command) | Main thread | Architect — Plan Mode research + approval |
 | `eng` | **Subagent** | **Isolated** | TDD implementation (fresh context each iteration) |
 | `rev` | **Subagent** | **Isolated** | Code review (fresh context each iteration) |
@@ -27,12 +27,12 @@ The plugin uses three types of components:
                     +------------------+
                     |    no-issue      |
                     +--------+---------+
-                             | /go:go {ISSUE_NUMBER}
+                             | /do:do {ISSUE_NUMBER}
                              v
                     +------------------+
                     |   needs-plan     |
                     +--------+---------+
-                             | /go:plan (Plan Mode)
+                             | /do:plan (Plan Mode)
                              v
                     +------------------+
               +---->| needs-approval   |<----+
@@ -63,7 +63,7 @@ The plugin uses three types of components:
                     +------------------+
                     |    approved      |
                     +--------+---------+
-                             | /go:finalize
+                             | /do:finalize
                              v
                     +------------------+
                     |   finalized      |
@@ -74,7 +74,7 @@ The plugin uses three types of components:
 
 The workflow stops and waits for human input at these points:
 
-1. **Plan Mode approval** - During `/go:plan`, the Architect enters Plan Mode (system-enforced read-only). User approves the plan via Plan Mode's built-in approval. This IS the plan approval — no separate `needs-approval` step needed.
+1. **Plan Mode approval** - During `/do:plan`, the Architect enters Plan Mode (system-enforced read-only). User approves the plan via Plan Mode's built-in approval. This IS the plan approval — no separate `needs-approval` step needed.
 2. **needs-approval** - Only hit during revision flow (reviewer sends plan back). User reviews revised plan.
 3. **needs-revision** - Reviewer found issues requiring plan changes
 
@@ -114,7 +114,7 @@ The plugin includes hooks (`hooks/hooks.json`) that:
 
 ## Dynamic Context Injection
 
-- `go.md` injects status via `!scripts/status.sh` — no LLM tokens wasted on deterministic git/file parsing
+- `do.md` injects status via `!scripts/status.sh` — no LLM tokens wasted on deterministic git/file parsing
 - `plan.md` injects the current issue from branch name
 - `status.md` injects the full status report via the shell script
 
@@ -126,7 +126,7 @@ After Plan Mode approval, the plan is written to `.claude/issues/{ISSUE_NUMBER}.
 
 Two mechanisms for improving the workflow:
 
-### Immediate Learning (`/go:learn`)
+### Immediate Learning (`/do:learn`)
 
 When user corrects behavior mid-session:
 1. Apply correction immediately
@@ -134,7 +134,7 @@ When user corrects behavior mid-session:
 3. Suggest permanent update to plugin
 4. If approved, commit and push
 
-### Post-Issue Learning (`/go:retro`)
+### Post-Issue Learning (`/do:retro`)
 
 After completing work:
 1. Review plan and review files
@@ -145,12 +145,12 @@ After completing work:
 ## Typical Session
 
 ```
-User: /go:go 123
+User: /do:do 123
 
 Claude: [updates plugin]
         [reads DCI status output]
         State: needs-plan
-        Running /go:plan...
+        Running /do:plan...
         Entering Plan Mode (system-enforced read-only)...
 
 Claude: [fetches GitHub issue context via gh]
@@ -170,11 +170,11 @@ Claude: [writes approved plan to .claude/issues/123.plan.md]
         [eng fixes issues in fresh context]
         Spawning rev subagent (iteration 2)...
         Approved
-        Ready for /go:finalize
+        Ready for /do:finalize
 
 User: Finalize it.
 
-Claude: [runs /go:retro]
+Claude: [runs /do:retro]
         No learnings identified.
         [commits and pushes]
         Branch pushed. Creating PR...
@@ -190,31 +190,31 @@ Work on multiple issues simultaneously using git worktrees.
 ```
 Main repo (main)                   Worktree (#123)
       |                                  |
-      +-- /go:go 123                     |
+      +-- /do:do 123                     |
       |   [creates worktree]             |
       |   [opens VS Code] ------------->|
       |                                  +-- claude
-      |                                  +-- /go:go 123
+      |                                  +-- /do:do 123
       |                                  +-- (normal workflow)
-      |                                  +-- /go:finalize
+      |                                  +-- /do:finalize
       |<---------------------------------+ [cleanup]
 ```
 
 ### How It Works
 
-1. Run `/go:go {ISSUE_NUMBER}` from main repo on `main` branch
+1. Run `/do:do {ISSUE_NUMBER}` from main repo on `main` branch
 2. Claude automatically creates a worktree at `.claude/worktrees/{ISSUE_NUMBER}`
 3. If VS Code `code` command is available, opens worktree in a new VS Code window
 4. Open a terminal in the worktree directory and run `claude` to start working
-5. On `/go:finalize`, settings sync back and worktree is cleaned up
+5. On `/do:finalize`, settings sync back and worktree is cleaned up
 
 ### Managing Worktrees
 
 | Command | Description |
 |---------|-------------|
-| `/go:worktree list` | See all active worktrees |
-| `/go:worktree sync` | Sync settings from main repo |
-| `/go:worktree cleanup {ISSUE_NUMBER}` | Manual cleanup |
+| `/do:worktree list` | See all active worktrees |
+| `/do:worktree sync` | Sync settings from main repo |
+| `/do:worktree cleanup {ISSUE_NUMBER}` | Manual cleanup |
 
 ### Settings That Sync
 

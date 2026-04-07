@@ -6,10 +6,10 @@
   },
   "plugins": [
     {
-      "name": "go",
+      "name": "do",
       "version": "1.0.0",
       "description": "Personal workflow commands",
-      "source": "./plugins/go"
+      "source": "./plugins/do"
     }
   ]
 }

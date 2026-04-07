@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deterministic status detection for the go plugin.
+# Deterministic status detection for the do plugin.
 # Outputs formatted status report with no LLM involvement.
 set -euo pipefail
 
@@ -119,38 +119,38 @@ NEXT=""
 
 if [ -z "$ISSUE" ]; then
   STATE="no-issue"
-  NEXT="Run /go:go {ISSUE_NUMBER} to start a new issue"
+  NEXT="Run /do:do {ISSUE_NUMBER} to start a new issue"
 elif ! $PLAN_EXISTS; then
   STATE="needs-plan"
-  NEXT="Run /go:plan to create implementation plan"
+  NEXT="Run /do:plan to create implementation plan"
 elif $PLAN_DRAFTED && ! $PLAN_APPROVED; then
   STATE="needs-approval"
   NEXT="Review and approve the plan"
 elif $PLAN_APPROVED && ! $IMPL_COMPLETE; then
   STATE="implementing"
-  NEXT="Continue implementation (run /go:eng)"
+  NEXT="Continue implementation (run /do:eng)"
 elif $IMPL_COMPLETE && ! $REVIEW_EXISTS; then
   STATE="reviewing"
-  NEXT="Run /go:rev to review implementation"
+  NEXT="Run /do:rev to review implementation"
 elif $REVIEW_EXISTS && [[ "$REVIEW_VERDICT" == *"Iterate"* ]]; then
   STATE="iterating"
-  NEXT="Fix review issues (run /go:eng), then re-review"
+  NEXT="Fix review issues (run /do:eng), then re-review"
 elif $REVIEW_EXISTS && [[ "$REVIEW_VERDICT" == *"Revise Plan"* ]]; then
   STATE="needs-revision"
   NEXT="Revise plan based on review feedback"
 elif $REVIEW_APPROVED; then
   STATE="approved"
-  NEXT="Run /go:finalize to create PR"
+  NEXT="Run /do:finalize to create PR"
 elif $REVIEW_EXISTS && [[ "$REVIEW_VERDICT" == *"Approved"* ]]; then
   STATE="approved"
-  NEXT="Run /go:finalize to create PR"
+  NEXT="Run /do:finalize to create PR"
 fi
 
 # Check if already pushed/committed (finalized)
 if [ -n "$ISSUE" ] && git log --oneline -1 2>/dev/null | grep -q "${ISSUE}:" 2>/dev/null; then
   if [ "$GIT_FILES_MODIFIED" -eq 0 ]; then
     STATE="finalized"
-    NEXT="Done - suggest /go:retro"
+    NEXT="Done - suggest /do:retro"
   fi
 fi
 

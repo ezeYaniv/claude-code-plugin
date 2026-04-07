@@ -19,14 +19,14 @@ source ~/.zshrc
 
 1. Set up GitHub token (see above)
 2. In Claude Code: `/plugin -> Marketplaces -> Add Marketplace -> ezeYaniv/claude-code-plugin`
-3. Install: `/plugin -> Install -> go@ezeYaniv`
+3. Install: `/plugin -> Install -> do@ezeYaniv`
 4. Select "Install for all users" to add to repo settings
 
 ## Usage
 
 Start any issue with:
 ```
-/go:go {ISSUE_NUMBER}
+/do:do {ISSUE_NUMBER}
 ```
 
 The orchestrator handles the rest - planning, implementation (via `eng` subagent), review (via `rev` subagent), and finalization.
@@ -39,15 +39,15 @@ See [workflow.md](workflow.md) for the full state machine, iteration loops, and 
 
 | Command | Description |
 |---------|-------------|
-| `/go:go` | Orchestrator - coordinates workflow, spawns subagents |
-| `/go:status` | Show current state (shell script via DCI) |
-| `/go:plan` | Create implementation plan (Plan Mode) |
-| `/go:pm` | Issue management and decomposition |
-| `/go:finalize` | Commit, push, and PR creation |
-| `/go:worktree` | Manage git worktrees for parallel development |
-| `/go:pr-review` | Review another dev's PR (forked context) |
-| `/go:learn` | Update plugin with feedback |
-| `/go:retro` | Extract learnings from completed work |
+| `/do:do` | Orchestrator - coordinates workflow, spawns subagents |
+| `/do:status` | Show current state (shell script via DCI) |
+| `/do:plan` | Create implementation plan (Plan Mode) |
+| `/do:pm` | Issue management and decomposition |
+| `/do:finalize` | Commit, push, and PR creation |
+| `/do:worktree` | Manage git worktrees for parallel development |
+| `/do:pr-review` | Review another dev's PR (forked context) |
+| `/do:learn` | Update plugin with feedback |
+| `/do:retro` | Extract learnings from completed work |
 
 ### Subagents (isolated context per invocation)
 
@@ -56,7 +56,7 @@ See [workflow.md](workflow.md) for the full state machine, iteration loops, and 
 | `eng` | TDD Engineer - implements code with fresh context each iteration (`memory: project`) |
 | `rev` | Code Reviewer - reviews with fresh context each iteration (`memory: user`) |
 
-Subagents are internal — they are spawned automatically by `/go:go` and should not be invoked directly. The orchestrator manages their lifecycle, passes them the right context (issue, plan, review feedback), and routes based on their results.
+Subagents are internal — they are spawned automatically by `/do:do` and should not be invoked directly. The orchestrator manages their lifecycle, passes them the right context (issue, plan, review feedback), and routes based on their results.
 
 ### Hidden Skills
 
@@ -83,7 +83,7 @@ Subagents are internal — they are spawned automatically by `/go:go` and should
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/plugins/cache/ezeYaniv/go/2.0.0/scripts/post-plan-mode.sh"
+            "command": "bash ~/.claude/plugins/cache/ezeYaniv/do/2.0.0/scripts/post-plan-mode.sh"
           }
         ]
       }
@@ -99,7 +99,7 @@ Subagents are internal — they are spawned automatically by `/go:go` and should
 1. Make changes on a feature branch
 2. Bump version in `.claude-plugin/plugin.json`
 3. Merge to main
-4. Updates are available on next `/go:go` (startup pulls latest)
+4. Updates are available on next `/do:do` (startup pulls latest)
 
 ## Key Architecture Decisions (v2.0)
 
@@ -109,7 +109,7 @@ Subagents are internal — they are spawned automatically by `/go:go` and should
 - **Status uses a shell script** via DCI — zero LLM tokens for deterministic git/file operations
 - **PreToolUse hooks** auto-approve safe bash commands during worktree setup
 - **WorktreeCreate hook** replaces default git worktree behavior for reliable worktree creation
-- **Plan persistence** has two layers of defense — PostToolUse hook writes it after approval, go.md verifies it exists
+- **Plan persistence** has two layers of defense — PostToolUse hook writes it after approval, do.md verifies it exists
 
 ## Conventions
 
@@ -123,8 +123,8 @@ Subagents are internal — they are spawned automatically by `/go:go` and should
 
 When Claude learns something, it updates this repo:
 
-1. `/go:learn "Always check for X"` - immediate learning
-2. `/go:retro` after completing work - systematic review
+1. `/do:learn "Always check for X"` - immediate learning
+2. `/do:retro` after completing work - systematic review
 
 Both commands:
 - Pull latest plugin

@@ -96,11 +96,11 @@ This ensures:
 ## Standalone Usage
 
 ```
-/go:retro
+/do:retro
 ```
 Reviews current issue (from branch). If called outside finalize, will prompt about committing.
 
 ```
-/go:retro {ISSUE_NUMBER}
+/do:retro {ISSUE_NUMBER}
 ```
 Reviews specific issue.
