@@ -20,12 +20,12 @@ source ~/.zshrc
 
 2. In Claude Code, add this marketplace:
 ```
-/plugin → Marketplaces → Add Marketplace → ezeYaniv/claude-code-plugin
+/plugin -> Marketplaces -> Add Marketplace -> ezeYaniv/claude-code-plugin
 ```
 
 3. Install the plugin:
 ```
-/plugin → Install → go@ezeYaniv
+/plugin -> Install -> go@ezeYaniv
 ```
 
 4. Select "Install for all users" to add to your repo settings.
@@ -38,28 +38,36 @@ Start working on any GitHub issue:
 ```
 
 The orchestrator handles everything:
-- Plans the implementation
-- Implements using TDD
-- Reviews and iterates automatically
-- Commits and pushes when ready
+- Plans the implementation (Plan Mode)
+- Spawns engineer subagent for TDD implementation
+- Spawns reviewer subagent for code review
+- Iterates automatically until approved
+- Commits, pushes, and creates PR when ready
 
 ## How It Works
 
 The `go` plugin implements a state machine workflow:
 
 ```
-no-issue → needs-plan → needs-approval → implementing ⇄ reviewing → approved → finalized
-                              ↓                              ↓
+no-issue -> needs-plan -> needs-approval -> implementing <-> reviewing -> approved -> finalized
+                              |                              |
                         (user reviews)              (auto iteration loop)
 ```
 
 ### Human Involvement
 
 You only need to intervene at two points:
-1. **Plan approval** - Review and approve the implementation plan
+1. **Plan approval** - Review and approve the implementation plan (in Plan Mode)
 2. **Plan revision** - When fundamental issues require replanning
 
-Everything else runs automatically, including the implementation-review iteration loop.
+Everything else runs automatically, including the implementation-review iteration loop using isolated subagents.
+
+### Architecture (v2.0)
+
+- **eng and rev are subagents** - each iteration gets a fresh context window with standards at the top
+- **testing-standards** is a shared skill preloaded into both subagents
+- **Status uses a shell script** via DCI - zero LLM tokens for deterministic state detection
+- **Hooks** auto-approve safe commands, create worktrees, and persist plans
 
 ### Self-Learning System
 
@@ -81,54 +89,64 @@ Both commands update this repository automatically when you approve changes.
 
 plugins/go/
   .claude-plugin/
-    plugin.json            # Plugin metadata
-  commands/
-    go.md                  # Main orchestrator
-    plan.md                # Planning workflow
-    eng.md                 # TDD implementation
-    rev.md                 # Code review
-    pm.md                  # Issue management
-    finalize.md            # Commit and push
-    pr-review.md           # PR review
-    learn.md               # Immediate learning
-    retro.md               # Post-issue learning
-    status.md              # State inspection
+    plugin.json            # Plugin metadata + version
+  commands/                # Skills (markdown prompts invoked via /go:<name>)
+    go.md                  # Orchestrator - state machine, subagent spawning
+    plan.md                # Architect - Plan Mode research + spec writing
+    finalize.md            # Commit, push, PR creation
+    pm.md                  # Issue management and decomposition
+    worktree.md            # Git worktree management
+    learn.md               # Feedback integration
+    retro.md               # Post-issue learning extraction
+    pr-review.md           # External PR review
+    status.md              # DCI shell script status display
+    testing-standards.md   # Hidden skill preloaded into eng + rev
+  agents/                  # Subagent definitions (spawned by orchestrator)
+    eng.md                 # TDD Engineer (memory: project, model: sonnet)
+    rev.md                 # Code Reviewer (memory: user, model: sonnet)
+  hooks/
+    hooks.json             # Hook definitions (PreToolUse, WorktreeCreate, PostToolUse)
+  scripts/                 # Shell scripts for hooks and DCI
+    status.sh              # Deterministic status detection
+    worktree-create.sh     # WorktreeCreate hook
+    worktree-detect.sh     # Worktree state detection for orchestrator routing
+    approve-setup-commands.sh  # PreToolUse hook - auto-approves safe bash commands
+    post-plan-mode.sh      # PostToolUse hook - persists plan after ExitPlanMode
   docs/
     README.md              # Plugin documentation
-    workflow.md            # State machine details
+    workflow.md            # State machine diagram, architecture, session walkthrough
 ```
 
-## Available Commands
+## Components
 
-| Command | Purpose | User Interaction |
-|---------|---------|------------------|
-| `/go:go {NUM}` | Orchestrate full workflow | Approves plan |
-| `/go:plan` | Create implementation plan | Reviews plan |
-| `/go:eng` | Implement using TDD | None (automatic) |
-| `/go:rev` | Review implementation | None (automatic) |
-| `/go:pm` | Manage and decompose issues | As needed |
-| `/go:finalize` | Commit and push | None |
-| `/go:pr-review` | Review someone else's PR | Provides feedback |
-| `/go:learn` | Update plugin with feedback | Approves changes |
-| `/go:retro` | Extract learnings | Approves updates |
-| `/go:status` | Show current state | None |
+### Skills (run in main context)
 
-## Workflow Details
+| Command | Description |
+|---------|-------------|
+| `/go:go` | Orchestrator - coordinates workflow, spawns subagents |
+| `/go:status` | Show current state (shell script via DCI) |
+| `/go:plan` | Create implementation plan (Plan Mode) |
+| `/go:pm` | Issue management and decomposition |
+| `/go:finalize` | Commit, push, PR creation |
+| `/go:worktree` | Manage git worktrees |
+| `/go:pr-review` | Review another dev's PR |
+| `/go:learn` | Update plugin with feedback |
+| `/go:retro` | Extract learnings from completed work |
 
-### The Iteration Loop
+### Subagents (isolated context per invocation)
 
-When `/go:rev` finds fixable issues, it automatically triggers `/go:eng` to fix them. This continues until:
-- All issues are resolved (moves to `approved`)
-- Issues require plan changes (moves to `needs-revision`)
+| Agent | Description |
+|-------|-------------|
+| `eng` | TDD Engineer - fresh context each iteration (`memory: project`) |
+| `rev` | Code Reviewer - fresh context each iteration (`memory: user`) |
 
-You're not involved in this loop - it runs automatically.
-
-### Conventions
+## Conventions
 
 - **Plans**: Stored in `.claude/issues/{NUM}.plan.md`
 - **Branches**: `feature/{NUM}_description` or `bugfix/{NUM}_description`
 - **Plan Structure**: Uses `<!-- SPECIFICATION -->` and `<!-- IMPLEMENTATION -->` markers
 - **Updates**: Auto-pulled on each `/go:go` execution
+- **Version**: Bump `.claude-plugin/plugin.json` version with every change
 
 ## Project-Specific Setup
 
@@ -138,20 +156,13 @@ Each project using this plugin should have a `CLAUDE.md` file with:
 - Key directories
 - Tech stack summary
 
-The workflow commands come from this plugin repository.
+Detailed standards go in `.claude/` files (project.md, standards.md, testing.md).
 
 ### Optional: Custom Status Line
 
-This repository includes a custom status line script that displays:
-- Issue number (extracted from branch names like `feature/123_description`)
-- Current branch name
-- Model being used (opus/sonnet/haiku)
-- Context window usage percentage
-- Recent prompts with contextual icons
+This repository includes a custom status line script. To use it in a project:
 
-To use it in a project:
-
-1. Copy the status line script to your project:
+1. Copy the status line script:
 ```bash
 mkdir -p .claude
 curl -o .claude/status_line.py https://raw.githubusercontent.com/ezeYaniv/claude-code-plugin/main/.claude/status_line.py
@@ -167,17 +178,6 @@ chmod +x .claude/status_line.py
 }
 ```
 
-The status line will automatically display issue numbers extracted from your branch names (format: `feature/123_description` or `bugfix/456_description`).
-
-## Contributing
-
-This is a personal plugin repository, but the self-learning system means it evolves based on actual usage:
-
-1. During work: `/go:learn "pattern to remember"`
-2. After completion: `/go:retro` to extract systematic learnings
-3. Approve the suggested updates
-4. Changes are committed and available on next `/go:go`
-
 ## Requirements
 
 - Claude Code CLI
@@ -188,7 +188,6 @@ This is a personal plugin repository, but the self-learning system means it evol
 
 - [Plugin Documentation](plugins/go/docs/README.md) - Installation and setup
 - [Workflow Details](plugins/go/docs/workflow.md) - State machine and iteration loops
-- Individual command files in [plugins/go/commands/](plugins/go/commands/)
 
 ## License
 
