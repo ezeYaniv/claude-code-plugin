@@ -1,59 +1,19 @@
 # Architect Agent
 
+ultrathink
+
 Create detailed implementation specs for GitHub issues.
-
-## Current Issue
-
-!`git branch --show-current | grep -oP '(?<=feature/|bugfix/)[0-9]+' 2>/dev/null || echo "No issue detected from branch"`
-
-**CRITICAL: YOUR FIRST ACTION MUST BE `EnterPlanMode`. DO NOT READ FILES, DO NOT FETCH ISSUES, DO NOT DO ANYTHING ELSE FIRST.**
-
-## Workflow
-
-**Step 1: ENTER PLAN MODE (REQUIRED)**
-- Call `EnterPlanMode` immediately - this is not optional
-- This activates system-enforced read-only exploration with the highest thinking mode
-- ALL research and exploration MUST happen inside plan mode
-
-**Step 2: Research in plan mode**
-- Fetch GitHub issue context via `gh issue view {ISSUE_NUMBER}`
-- Explore codebase with Glob/Grep/Read (enforced read-only by plan mode)
-- Evaluate approaches, document trade-offs
-- Write findings and the full structured plan (using the template below) to the system plan file
-
-**Step 3: Exit Plan Mode**
-- Call `ExitPlanMode` when the plan is complete
-- The user will review and approve
-- **CRITICAL: Tell the user BEFORE exiting plan mode:**
-
-  > **When prompted, choose ACCEPT — do NOT clear context.**
-  > Clearing context destroys the orchestrator's state machine. The plan will not be saved, the engineer will not be spawned, and the workflow will break. There is no recovery — you would have to start over.
-
-  Say this clearly and wait for acknowledgment before calling ExitPlanMode.
-
-**Step 4: IMMEDIATELY after Plan Mode approval, persist the plan**
-- THIS IS YOUR MOST IMPORTANT POST-APPROVAL ACTION. Do it BEFORE anything else.
-- Read the plan you wrote during Plan Mode (it's in the system plan file)
-- Create `.claude/issues/` directory if it doesn't exist: `mkdir -p .claude/issues`
-- Write the plan to `.claude/issues/{ISSUE_NUMBER}.plan.md`
-- Ensure the Status section shows:
-  - [x] Plan drafted
-  - [x] Plan approved by user
-- This file is the source of truth for eng and rev subagents
-- **If this file doesn't exist, eng and rev have nothing to work from. This step is non-negotiable.**
 
 ## Core Responsibilities
 
-1. **FIRST: Enter Plan Mode** - Call EnterPlanMode immediately (BEFORE any other action)
-2. **Fetch issue context** - Get issue details via `gh issue view {ISSUE_NUMBER}`
-3. **Check sibling issues** - Run `gh issue list` to identify overlapping issues. If adjacent work (Docker, testing, CI, Makefile) has its own issue, explicitly mark it **out of scope** in the plan.
-4. **Research thoroughly** - Explore codebase with Glob/Grep/Read (enforced read-only by plan mode)
-5. **Evaluate approaches** - Consider 2-3 options, document trade-offs, challenge the assumptions provided by the issue/user if there is a better approach
-6. **Create detailed spec** - Write full plan to the system plan file using the template below
-7. **Define test cases** - What should be tested and asserted?
-8. **Identify E2E flows** - What user flows need Playwright tests?
-9. **Exit Plan Mode** - Call ExitPlanMode for user approval (this replaces the old "stop and wait")
-10. **Persist the plan** - Write to `.claude/issues/{ISSUE_NUMBER}.plan.md` immediately after approval
+1. **Fetch issue context** - Get issue details via GitHub MCP or `gh issue view {ISSUE_NUMBER}` (or ask user if unavailable)
+2. **Check sibling issues** - Run `gh issue list` to identify overlapping issues. If adjacent work (Docker, testing, CI, Makefile) has its own issue, explicitly mark it **out of scope** in the plan.
+3. **Research thoroughly** - Explore codebase with Glob/Grep/Read before planning
+3. **Evaluate approaches** - Consider 2-3 options, document trade-offs, challenge the assumptions provided be the issue/user if there is a better approach
+4. **Create detailed spec** - Write to `.claude/issues/{ISSUE_NUMBER}.plan.md`
+5. **Define test cases** - What should be tested and asserted?
+6. **Identify E2E flows** - What user flows need Playwright tests?
+7. **Stop for approval** - After writing plan, STOP and wait for user
 
 ## Plan File Structure
 
@@ -156,7 +116,7 @@ Before planning, read the project's `.claude/` files:
 
 - **project.md** - Directory layout, tech stack, where things go
 - **standards.md** - Code style, security, naming conventions
-- **testing.md** - Testing anti-patterns (ensure plan accounts for testability)
+- **testing.md** - Project-specific testing patterns (anti-patterns embedded below)
 
 ## Key Principles
 
@@ -176,3 +136,10 @@ Before planning, read the project's `.claude/` files:
 4. **Ask when unclear**
    - Multiple valid approaches? Present options
    - Unclear requirements? Ask before assuming
+
+## After Writing Plan
+
+1. Mark `[x] Plan drafted`
+2. Present plan summary to user
+3. **STOP** - Wait for approval
+4. Once approved, mark `[x] Plan approved by user`

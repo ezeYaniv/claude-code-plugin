@@ -18,20 +18,28 @@ If no subcommand provided, show help.
 
 `/go:worktree setup {ISSUE_NUMBER}`
 
-Create a new worktree for the given issue using Claude Code's built-in `EnterWorktree` tool. The WorktreeCreate hook (`worktree-create.sh`) automatically handles config copying, plugin registration, and VSCode Project Manager.
+Create a new worktree for the given issue.
 
 ### Process
 
 1. **Validate environment**
    ```bash
-   # Must not already be in a worktree
+   # Get repo name and main repo path
+   REPO_NAME=$(basename "$(git rev-parse --show-toplevel)")
+   MAIN_REPO=$(git rev-parse --show-toplevel)
+   WORKTREE_PATH="../${REPO_NAME}-${ISSUE_NUMBER}"
+   ```
+
+2. **Check if already in a worktree**
+   ```bash
+   # If git rev-parse --git-common-dir differs from --git-dir, we're in a worktree
    if [ "$(git rev-parse --git-common-dir)" != "$(git rev-parse --git-dir)" ]; then
      echo "Already in a worktree. Run this from the main repo."
      exit 1
    fi
    ```
 
-2. **Check if worktree already exists**
+3. **Check if worktree already exists**
    ```bash
    if git worktree list | grep -q "${ISSUE_NUMBER}"; then
      EXISTING_PATH=$(git worktree list | grep "${ISSUE_NUMBER}" | awk '{print $1}')
@@ -40,46 +48,70 @@ Create a new worktree for the given issue using Claude Code's built-in `EnterWor
    fi
    ```
 
-3. **Create worktree using EnterWorktree**
-
-   Use the `EnterWorktree` tool with `name: {ISSUE_NUMBER}`. This creates the worktree at `.claude/worktrees/{ISSUE_NUMBER}/` and switches the session into it.
-
-   The WorktreeCreate hook automatically:
-   - Copies `.env`, `.claude/settings.local.json` from main repo
-   - Registers Claude Code plugins for the worktree path
-   - Adds to VSCode Project Manager
-
-4. **Set up proper branch**
-
-   After entering the worktree, create the correct feature branch:
+4. **Fetch latest and create branch**
    ```bash
    git fetch origin
-   # Get issue title from GitHub for branch name (via gh issue view {ISSUE_NUMBER})
+   # Get issue title from GitHub for branch name
+   TITLE=$(gh issue view ${ISSUE_NUMBER} --json title -q '.title')
    # Slugify: lowercase, replace spaces with hyphens, remove special chars
    BRANCH_NAME="feature/${ISSUE_NUMBER}_${SLUGIFIED_TITLE}"
-   git checkout -B "${BRANCH_NAME}" origin/main
    ```
 
-5. **Install dependencies and set up hooks**
+5. **Create worktree**
    ```bash
+   git worktree add "${WORKTREE_PATH}" -b "${BRANCH_NAME}" origin/main
+   ```
+
+6. **Copy settings files**
+   ```bash
+   # Copy .env if exists
+   [ -f ".env" ] && cp ".env" "${WORKTREE_PATH}/.env"
+
+   # Copy .claude/settings.local.json if exists
+   [ -f ".claude/settings.local.json" ] && cp ".claude/settings.local.json" "${WORKTREE_PATH}/.claude/settings.local.json"
+   ```
+
+7. **Install dependencies and set up hooks**
+   ```bash
+   cd "${WORKTREE_PATH}"
    npm install  # Installs dependencies and triggers Husky's prepare script for git hooks
    if [ -f "pyproject.toml" ]; then
-      # Deactivate any existing venv to avoid poetry using the wrong one
-      [ -n "$VIRTUAL_ENV" ] && deactivate 2>/dev/null || true
-      unset VIRTUAL_ENV
       poetry install
    fi
    echo "Dependencies installed and git hooks configured"
    ```
 
-6. **Output summary**
+8. **VS Code integration**
+   ```bash
+   # Open worktree in new VS Code window if 'code' command is available
+   if command -v code &> /dev/null; then
+     code -n "$(cd "${WORKTREE_PATH}" && pwd)"
+     echo "Opened VS Code in new window for ${ISSUE_NUMBER}"
+   fi
+   ```
+
+9. **Add to VS Code Project Manager**
+   ```bash
+   # Add worktree to Project Manager for fast switching
+   PROJECTS_JSON="$HOME/Library/Application Support/Code/User/globalStorage/alefragnani.project-manager/projects.json"
+   if [ -f "$PROJECTS_JSON" ] && command -v jq &> /dev/null; then
+     ABSOLUTE_PATH="$(cd "${WORKTREE_PATH}" && pwd)"
+     jq --arg name "${REPO_NAME}-${ISSUE_NUMBER}" \
+        --arg path "$ABSOLUTE_PATH" \
+        '. += [{"name": $name, "rootPath": $path, "paths": [], "tags": ["worktree"], "enabled": true, "profile": ""}]' \
+        "$PROJECTS_JSON" > "$PROJECTS_JSON.tmp" && mv "$PROJECTS_JSON.tmp" "$PROJECTS_JSON"
+     echo "Added to VS Code Project Manager"
+   fi
+   ```
+
+10. **Output summary**
    ```
    Worktree created:
-   - Path: .claude/worktrees/{ISSUE_NUMBER}
+   - Path: {absolute_path}
    - Branch: {branch_name}
-   - Config files copied, plugins registered, VSCode PM updated (via hook)
+   - Settings copied: .env, .claude/settings.local.json
 
-   Ready to continue workflow.
+   Next: Open a terminal in the worktree directory and run 'claude'
    ```
 
 ---
@@ -207,12 +239,12 @@ Remove a worktree and sync settings back to main repo.
    ```
    Settings sync for .env:
 
-   Unchanged: 12 keys
-   New in worktree (will add to main):
+   ✅ Unchanged: 12 keys
+   ➕ New in worktree (will add to main):
       + NEW_API_KEY=abc123
       + FEATURE_FLAG=true
 
-   Conflicts (same key, different values):
+   ⚠️  Conflicts (same key, different values):
 
    [1] DATABASE_URL
        Main:     postgres://localhost:5432/main_db
@@ -271,10 +303,10 @@ Remove a worktree and sync settings back to main repo.
    ```
    Settings sync for .claude/settings.local.json:
 
-   New keys in worktree (will add):
+   ➕ New keys in worktree (will add):
       + newPermission: {...}
 
-   Conflicts:
+   ⚠️  Conflicts:
 
    [1] permissions.allowedTools
        Main:     ["Read", "Write", "Bash"]
@@ -314,32 +346,15 @@ Remove a worktree and sync settings back to main repo.
    fi
    ```
 
-6. **Remove Claude Code plugin registrations for worktree**
-
-   ```bash
-   PLUGINS_JSON="$HOME/.claude/plugins/installed_plugins.json"
-   if [ -f "$PLUGINS_JSON" ] && command -v jq &> /dev/null; then
-     ABSOLUTE_WT_PATH="$(cd "${WORKTREE_PATH}" && pwd)"
-     UPDATED=$(jq --arg wtPath "$ABSOLUTE_WT_PATH" '
-       .plugins |= with_entries(
-         .value |= [.[] | select(.projectPath != $wtPath)]
-       )
-     ' "$PLUGINS_JSON")
-     echo "$UPDATED" > "$PLUGINS_JSON"
-     echo "Removed Claude Code plugin registrations for worktree"
-   fi
-   ```
-
-7. **Remove worktree**
+6. **Remove worktree**
    ```bash
    git worktree remove "${WORKTREE_PATH}" --force
    ```
 
-8. **Output summary**
+7. **Output summary**
    ```
    Worktree removed: {path}
    Settings synced back to: {main_repo}
-   Plugin registrations cleaned up
    ```
 
 ---
@@ -366,7 +381,7 @@ Manually sync settings from main repo to current worktree. Useful if settings we
    WORKTREE_PATH=$(git rev-parse --show-toplevel)
    ```
 
-3. **Intelligent sync with conflict resolution (main -> worktree)**
+3. **Intelligent sync with conflict resolution (main → worktree)**
 
    For each config file, compare main vs worktree:
 
@@ -380,10 +395,10 @@ Manually sync settings from main repo to current worktree. Useful if settings we
    **Step 2: Analyze differences**
 
    For `.env` files:
-   - Keys only in main (new) -> will add to worktree
-   - Keys only in worktree -> keep (local changes)
-   - Same value -> no action
-   - Different value -> CONFLICT
+   - Keys only in main (new) → will add to worktree
+   - Keys only in worktree → keep (local changes)
+   - Same value → no action
+   - Different value → CONFLICT
 
    **Step 3: Display diff and resolve conflicts**
 
@@ -391,10 +406,10 @@ Manually sync settings from main repo to current worktree. Useful if settings we
    Settings sync from main repo to worktree:
 
    .env:
-     Unchanged: 10 keys
-     New in main (will add): NEW_SHARED_VAR=value
-     Only in worktree (will keep): LOCAL_DEBUG=true
-     Conflicts:
+     ✅ Unchanged: 10 keys
+     ➕ New in main (will add): NEW_SHARED_VAR=value
+     🔒 Only in worktree (will keep): LOCAL_DEBUG=true
+     ⚠️  Conflicts:
 
      [1] API_ENDPOINT
          Main:     https://api.prod.example.com
@@ -436,7 +451,7 @@ Usage:
   /go:worktree sync                   Sync settings from main repo
 
 Example:
-  /go:worktree setup 123              # Creates .claude/worktrees/123 worktree
+  /go:worktree setup 123              # Creates ../repo-123 worktree
   /go:worktree list                   # Shows all active worktrees
   /go:worktree cleanup 123            # Removes worktree after PR merged
 ```

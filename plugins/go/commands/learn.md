@@ -10,14 +10,14 @@ Make corrections and preferences permanent.
 
 Automatically categorize each learning:
 
-**Universal (-> plugin):**
+**Universal (→ plugin):**
 - Workflow improvements (orchestration, state machine)
 - TDD patterns and anti-patterns
 - Review process improvements
 - Planning structure changes
 - Cross-project conventions
 
-**Project-Specific (-> project's .claude/ files):**
+**Project-Specific (→ project's .claude/ files):**
 - Directory layout conventions
 - Project-specific test patterns
 - Tech stack specifics
@@ -72,7 +72,6 @@ git -C ~/.claude/plugins/marketplaces/ezeYaniv pull
 # Make edit to target command file
 git -C ~/.claude/plugins/marketplaces/ezeYaniv diff
 # Commit and push
-# IMPORTANT: Bump version in .claude-plugin/plugin.json
 git -C ~/.claude/plugins/marketplaces/ezeYaniv add -A
 git -C ~/.claude/plugins/marketplaces/ezeYaniv commit -m "learn: {brief description}"
 git -C ~/.claude/plugins/marketplaces/ezeYaniv push
@@ -83,17 +82,17 @@ git -C ~/.claude/plugins/marketplaces/ezeYaniv push
 ```
 /go:learn Always run black before committing Python
 ```
--> Project-specific -> updates project's standards.md
+→ Project-specific → updates project's standards.md
 
 ```
 /go:learn When reviewing, check for the N+1 query anti-pattern
 ```
--> Universal -> updates plugin/commands/rev.md
+→ Universal → updates plugin/commands/rev.md
 
 ```
 /go:learn E2E tests should use data-testid not class selectors
 ```
--> Could be either - if it's a project convention -> project's testing.md; if it's universal best practice -> plugin/commands/eng.md
+→ Could be either - if it's a project convention → project's testing.md; if it's universal best practice → plugin/commands/eng.md
 
 ## Writing Style
 

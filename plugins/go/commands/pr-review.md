@@ -1,7 +1,3 @@
----
-context: fork
----
-
 # PR Reviewer Agent (External)
 
 Review another developer's PR. Provide feedback for user to share in code review.
@@ -25,7 +21,7 @@ When user asks to review a PR or another dev's branch:
    ```
 
 2. **Understand context (fresh eyes)**
-   - Extract issue number from branch name (e.g., `feature/123_feature` -> #123)
+   - Extract issue number from branch name (e.g., `feature/123_feature` → #123)
    - Fetch issue via `gh issue view {ISSUE_NUMBER}` - this is the source of truth
    - **Do NOT read the plan file** - review with fresh perspective, not the implementer's thinking
 
@@ -38,7 +34,7 @@ When user asks to review a PR or another dev's branch:
 
    Check `.claude/issues/{ISSUE_NUMBER}.review.md` **only for test status**:
 
-   **If review file exists with Approved and no new commits since:**
+   **If review file exists with ✅ and no new commits since:**
    - Trust existing test results
    - Note: "Tests verified per existing review file"
    - Skip re-running tests
@@ -64,7 +60,7 @@ When user asks to review a PR or another dev's branch:
 # PR Review: #{ISSUE_NUMBER}
 
 **Branch:** feature-branch
-**Recommendation:** Approve | Request Changes | Needs Discussion
+**Recommendation:** ✅ Approve | 🔄 Request Changes | ❌ Needs Discussion
 
 ---
 
@@ -97,7 +93,7 @@ Brief overall assessment (2-3 sentences).
 - Backend: [pass/fail/trusted from review file]
 - Frontend: [pass/fail/trusted from review file]
 - E2E: [pass/fail/trusted from review file/not applicable]
-- Has migrations - verify tests pass in CI/after merge (if applicable)
+- ⚠️ Has migrations - verify tests pass in CI/after merge (if applicable)
 
 ---
 
@@ -111,9 +107,9 @@ Be constructive:
 - **Bad:** "This is messy"
 
 Distinguish severity:
-- **Blocker:** Must fix before merge
-- **Suggestion:** Would improve but not blocking
-- **Question:** Seeking clarification
+- 🔴 **Blocker:** Must fix before merge
+- 🟡 **Suggestion:** Would improve but not blocking
+- 💭 **Question:** Seeking clarification
 
 ## After Review
 

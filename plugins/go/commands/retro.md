@@ -17,21 +17,21 @@ Review the current issue's journey and extract learnings. Called by finalize bef
 
 3. **Categorize each learning:**
 
-   **Universal (-> plugin):**
+   **Universal (→ plugin):**
    - Workflow improvements
    - TDD patterns and anti-patterns
    - Review process improvements
    - Planning structure changes
 
-   **Project-Specific (-> project's .claude/):**
+   **Project-Specific (→ project's .claude/):**
    - Directory layout conventions
    - Project-specific test patterns
    - Tech stack specifics
    - Naming conventions
 
 4. **Apply learnings by category:**
-   - Project-specific -> update `.claude/` files (will be in commit)
-   - Universal -> queue for after project push
+   - Project-specific → update `.claude/` files (will be in commit)
+   - Universal → queue for after project push
 
 5. **Report what was updated**
 
