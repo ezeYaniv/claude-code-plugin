@@ -6,35 +6,52 @@ Prepare branch for PR after review approval.
 
 1. **Verify review approval**
    - Read `.claude/issues/{ISSUE_NUMBER}.review.md`
-   - Confirm `✅ Approved`
+   - Confirm `Approved`
    - Stop if not approved
 
-2. **Run retro (before commit)**
-   - `/go:retro` to capture learnings
-   - Project-specific learnings → applied to `.claude/` files now
-   - Universal learnings → queued for step 6
+2. **Reconcile plan with actual changes**
 
-3. **Stage changes**
+   The plan may have drifted during iteration — especially when the user gave feedback that eng implemented without updating the plan. Before committing, make the plan match reality.
+
+   - Run `git diff main...HEAD` to see all code changes
+   - Read `.claude/issues/{ISSUE_NUMBER}.plan.md`
+   - Compare: are there implemented features, modified signatures, added/removed behaviors, or changed approaches not reflected in the plan?
+   - Update the plan's Specification and Implementation sections to accurately describe what was actually built
+   - Keep the plan's format and structure intact — just make it truthful
+   - If changes are minor (naming, implementation details), update inline
+   - If changes are significant (new endpoints, changed behavior), add/revise the relevant spec sections
+
+   The goal: someone reading the committed plan can understand exactly what was built and why.
+
+3. **Run retro (before commit)**
+   - `/go:retro` to capture learnings
+   - Project-specific learnings -> applied to `.claude/` files now
+   - Universal learnings -> queued for step 7
+
+4. **Stage changes**
    ```bash
    git add -A
    ```
-   This includes code changes AND any `.claude/` file updates from retro.
+   This includes code changes, reconciled plan, AND any `.claude/` file updates from retro.
 
-4. **Commit**
+5. **Commit**
    ```bash
    git commit -m "{ISSUE_NUMBER}: concise description"
    ```
 
-5. **Push**
+6. **Push**
    ```bash
    git push -u origin feature/{ISSUE_NUMBER}_description
    ```
 
-6. **Apply universal learnings to plugin**
+7. **Apply universal learnings to plugin**
    If retro identified universal learnings:
    ```bash
    git -C ~/.claude/plugins/marketplaces/ezeYaniv pull
    # Apply queued updates to command files
+   # IMPORTANT: Bump version in .claude-plugin/plugin.json — Claude Code
+   # uses this to decide whether to update the cache. Without a bump,
+   # users won't see changes.
    git -C ~/.claude/plugins/marketplaces/ezeYaniv add -A
    git -C ~/.claude/plugins/marketplaces/ezeYaniv commit -m "retro({ISSUE_NUMBER}): {brief description}"
    git -C ~/.claude/plugins/marketplaces/ezeYaniv push
@@ -42,8 +59,10 @@ Prepare branch for PR after review approval.
 
 7. **Create PR via GitHub CLI**
 
+**IMPORTANT:** The default target branch should be main.
+
    ```bash
-   gh pr create --base uat --title "{ISSUE_NUMBER}: {description}" --body "$(cat <<'EOF'
+   gh pr create --base main --title "{ISSUE_NUMBER}: {description}" --body "$(cat <<'EOF'
    ## Summary
    - {bullet 1}
    - {bullet 2}
@@ -53,7 +72,7 @@ Prepare branch for PR after review approval.
    - [x] E2E tests pass (if applicable)
    - [ ] Manual verification
 
-   Closes {ISSUE_NUMBER}
+   Closes #{ISSUE_NUMBER}
    EOF
    )"
    ```
@@ -112,9 +131,9 @@ Prepare branch for PR after review approval.
      Settings sync from worktree to main repo:
 
      .env:
-       ✅ Unchanged: 12 keys
-       ➕ Will add: NEW_VAR=value, ANOTHER_VAR=123
-       ⚠️  Conflicts:
+       Unchanged: 12 keys
+       Will add: NEW_VAR=value, ANOTHER_VAR=123
+       Conflicts:
 
        [1] DATABASE_URL
            Main:     postgres://localhost:5432/main_db
@@ -122,8 +141,8 @@ Prepare branch for PR after review approval.
            Keep: (m)ain / (w)orktree / (s)kip?
 
      .claude/settings.local.json:
-       ✅ No conflicts
-       ➕ Will add: newPermission key
+       No conflicts
+       Will add: newPermission key
      ```
 
      For each conflict, prompt user to choose:
@@ -169,6 +188,6 @@ Prepare branch for PR after review approval.
 
 ## Commit Message Style
 
-- Prefix with ticket: `{ISSUE_NUMBER}: description`
+- Prefix with issue number: `{ISSUE_NUMBER}: description`
 - Brief and descriptive (50 chars or less)
 - Focus on what, not how
