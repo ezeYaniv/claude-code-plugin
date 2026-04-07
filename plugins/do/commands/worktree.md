@@ -16,7 +16,7 @@ If no subcommand provided, show help.
 
 ## Setup
 
-`/go:worktree setup {ISSUE_NUMBER}`
+`/do:worktree setup {ISSUE_NUMBER}`
 
 Create a new worktree for the given issue using Claude Code's built-in `EnterWorktree` tool. The WorktreeCreate hook (`worktree-create.sh`) automatically handles config copying, plugin registration, and VSCode Project Manager.
 
@@ -86,7 +86,7 @@ Create a new worktree for the given issue using Claude Code's built-in `EnterWor
 
 ## List
 
-`/go:worktree list`
+`/do:worktree list`
 
 Show all worktrees and their status.
 
@@ -122,7 +122,7 @@ Show all worktrees and their status.
 
 ## Cleanup
 
-`/go:worktree cleanup {ISSUE_NUMBER}`
+`/do:worktree cleanup {ISSUE_NUMBER}`
 
 Remove a worktree and sync settings back to main repo.
 
@@ -346,7 +346,7 @@ Remove a worktree and sync settings back to main repo.
 
 ## Sync
 
-`/go:worktree sync`
+`/do:worktree sync`
 
 Manually sync settings from main repo to current worktree. Useful if settings were updated in main repo after worktree was created (e.g., another worktree finished and synced new settings).
 
@@ -430,13 +430,13 @@ If no subcommand or unrecognized subcommand:
 Worktree Management - Work on multiple issues in parallel
 
 Usage:
-  /go:worktree setup {ISSUE_NUMBER}   Create worktree for issue
-  /go:worktree list                   Show all worktrees
-  /go:worktree cleanup {ISSUE_NUMBER} Remove worktree, sync settings back
-  /go:worktree sync                   Sync settings from main repo
+  /do:worktree setup {ISSUE_NUMBER}   Create worktree for issue
+  /do:worktree list                   Show all worktrees
+  /do:worktree cleanup {ISSUE_NUMBER} Remove worktree, sync settings back
+  /do:worktree sync                   Sync settings from main repo
 
 Example:
-  /go:worktree setup 123              # Creates .claude/worktrees/123 worktree
-  /go:worktree list                   # Shows all active worktrees
-  /go:worktree cleanup 123            # Removes worktree after PR merged
+  /do:worktree setup 123              # Creates .claude/worktrees/123 worktree
+  /do:worktree list                   # Shows all active worktrees
+  /do:worktree cleanup 123            # Removes worktree after PR merged
 ```

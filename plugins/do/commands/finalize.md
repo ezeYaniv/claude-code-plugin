@@ -24,7 +24,7 @@ Prepare branch for PR after review approval.
    The goal: someone reading the committed plan can understand exactly what was built and why.
 
 3. **Run retro (before commit)**
-   - `/go:retro` to capture learnings
+   - `/do:retro` to capture learnings
    - Project-specific learnings -> applied to `.claude/` files now
    - Universal learnings -> queued for step 7
 
